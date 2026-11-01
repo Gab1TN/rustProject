@@ -1,0 +1,10 @@
+# Build Rust
+/target
+
+# Documentation interne de l'équipe (ne pas publier)
+/docs/
+
+# Fichiers système / IDE
+.DS_Store
+Thumbs.db
+.idea/

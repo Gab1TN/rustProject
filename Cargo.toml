@@ -1,0 +1,8 @@
+[package]
+name = "phone_trie"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Stockage et accès efficace de numéros de téléphone via un trie (prefix tree)"
+
+[dependencies]
