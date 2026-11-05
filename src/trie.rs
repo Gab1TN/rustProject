@@ -14,6 +14,16 @@ pub struct Node {
 }
 
 impl Node {
+    /// Enfants du nœud dans l'ordre d'insertion, sous la forme `(chiffre, nœud)`.
+    pub fn children(&self) -> impl Iterator<Item = (char, &Node)> {
+        self.children.iter().map(|(digit, node)| (*digit, node))
+    }
+
+    /// Nom du contact dont le numéro se termine sur ce nœud, s'il y en a un.
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
     /// Enfant qui correspond à `digit`, s'il existe.
     fn child(&self, digit: char) -> Option<&Node> {
         self.children
@@ -93,7 +103,7 @@ impl Trie {
         for digit in number.chars() {
             node = node.child(digit)?;
         }
-        node.name.as_deref()
+        node.name()
     }
 
     /// Nombre de numéros enregistrés.
@@ -105,11 +115,31 @@ impl Trie {
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
+
+    /// Racine du trie. Elle ne représente aucun chiffre : ses enfants sont les
+    /// premiers chiffres des numéros.
+    pub fn root(&self) -> &Node {
+        &self.root
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Chiffres des enfants d'un nœud, dans l'ordre.
+    fn digits(node: &Node) -> Vec<char> {
+        node.children().map(|(digit, _)| digit).collect()
+    }
+
+    /// Nœud atteint en suivant `prefix` depuis la racine.
+    fn node_at<'a>(trie: &'a Trie, prefix: &str) -> &'a Node {
+        let mut node = trie.root();
+        for digit in prefix.chars() {
+            node = node.child(digit).expect("le préfixe doit exister");
+        }
+        node
+    }
 
     /// Contacts de l'exemple du sujet (`data/04_common_parts.json`).
     fn subject_example() -> Trie {
@@ -191,5 +221,42 @@ mod tests {
         trie.insert("15", "SAMU");
         trie.insert("15", "Urgences médicales");
         assert_eq!(trie.get("15"), Some("Urgences médicales"));
+    }
+
+    #[test]
+    fn shared_prefix_is_stored_once() {
+        let mut trie = Trie::new();
+        trie.insert("0412578440", "Alice");
+        trie.insert("0412199803", "Bob");
+        assert_eq!(digits(trie.root()), ['0']);
+        assert_eq!(digits(node_at(&trie, "041")), ['2']);
+    }
+
+    #[test]
+    fn children_keep_insertion_order() {
+        let mut trie = Trie::new();
+        trie.insert("0412578440", "Alice");
+        trie.insert("0412199803", "Bob");
+        assert_eq!(digits(node_at(&trie, "0412")), ['5', '1']);
+    }
+
+    #[test]
+    fn distinct_first_digits_are_children_of_root() {
+        let trie = subject_example();
+        assert_eq!(digits(trie.root()), ['0', '1']);
+    }
+
+    #[test]
+    fn name_is_only_on_last_digit() {
+        let trie = subject_example();
+        assert_eq!(node_at(&trie, "11").name(), None);
+        assert_eq!(node_at(&trie, "112").name(), Some("Urgences"));
+    }
+
+    #[test]
+    fn subject_example_has_expected_branches() {
+        let trie = subject_example();
+        assert_eq!(digits(node_at(&trie, "04")), ['1', '6']);
+        assert_eq!(digits(node_at(&trie, "1")), ['1', '5']);
     }
 }
