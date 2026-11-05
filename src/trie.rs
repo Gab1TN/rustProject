@@ -123,6 +123,24 @@ impl Trie {
     }
 }
 
+/// Construit un trie à partir de paires `(numéro, nom)`.
+///
+/// ```
+/// use phone_trie::trie::Trie;
+///
+/// let trie: Trie = [("112", "Urgences"), ("15", "SAMU")].into_iter().collect();
+/// assert_eq!(trie.get("15"), Some("SAMU"));
+/// ```
+impl<'a> FromIterator<(&'a str, &'a str)> for Trie {
+    fn from_iter<I: IntoIterator<Item = (&'a str, &'a str)>>(pairs: I) -> Self {
+        let mut trie = Trie::new();
+        for (number, name) in pairs {
+            trie.insert(number, name);
+        }
+        trie
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -258,5 +276,13 @@ mod tests {
         let trie = subject_example();
         assert_eq!(digits(node_at(&trie, "04")), ['1', '6']);
         assert_eq!(digits(node_at(&trie, "1")), ['1', '5']);
+    }
+
+    #[test]
+    fn collect_builds_trie_from_pairs() {
+        let pairs = [("112", "Urgences"), ("15", "SAMU"), ("112", "Pompiers")];
+        let trie: Trie = pairs.into_iter().collect();
+        assert_eq!(trie.len(), 2);
+        assert_eq!(trie.get("112"), Some("Pompiers"));
     }
 }
