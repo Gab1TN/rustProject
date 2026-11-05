@@ -14,6 +14,14 @@ pub struct Node {
 }
 
 impl Node {
+    /// Enfant qui correspond à `digit`, s'il existe.
+    fn child(&self, digit: char) -> Option<&Node> {
+        self.children
+            .iter()
+            .find(|(child_digit, _)| *child_digit == digit)
+            .map(|(_, node)| node)
+    }
+
     /// Enfant qui correspond à `digit`, ajouté à la fin des enfants s'il n'existe pas encore.
     fn child_or_insert(&mut self, digit: char) -> &mut Node {
         let index = match self
@@ -42,6 +50,8 @@ impl Node {
 /// trie.insert("112", "Urgences");
 /// trie.insert("15", "SAMU");
 ///
+/// assert_eq!(trie.get("112"), Some("Urgences"));
+/// assert_eq!(trie.get("11"), None);
 /// assert_eq!(trie.len(), 2);
 /// ```
 #[derive(Debug, Default)]
@@ -77,6 +87,15 @@ impl Trie {
         previous
     }
 
+    /// Nom associé exactement à `number`, ou `None` si ce numéro n'a pas été ajouté.
+    pub fn get(&self, number: &str) -> Option<&str> {
+        let mut node = &self.root;
+        for digit in number.chars() {
+            node = node.child(digit)?;
+        }
+        node.name.as_deref()
+    }
+
     /// Nombre de numéros enregistrés.
     pub fn len(&self) -> usize {
         self.len
@@ -91,6 +110,17 @@ impl Trie {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Contacts de l'exemple du sujet (`data/04_common_parts.json`).
+    fn subject_example() -> Trie {
+        let mut trie = Trie::new();
+        trie.insert("0412578440", "Alice");
+        trie.insert("0412199803", "Bob");
+        trie.insert("0468892011", "patate");
+        trie.insert("112", "Urgences");
+        trie.insert("15", "SAMU");
+        trie
+    }
 
     #[test]
     fn new_trie_is_empty() {
@@ -120,5 +150,46 @@ mod tests {
         trie.insert("0412578440", "Alice");
         assert_eq!(trie.insert("0412578440", "Bob"), Some("Alice".to_string()));
         assert_eq!(trie.len(), 1);
+    }
+
+    #[test]
+    fn get_returns_name_of_inserted_number() {
+        let trie = subject_example();
+        assert_eq!(trie.get("0412199803"), Some("Bob"));
+    }
+
+    #[test]
+    fn get_unknown_number_returns_none() {
+        let trie = subject_example();
+        assert_eq!(trie.get("0699999999"), None);
+    }
+
+    #[test]
+    fn get_prefix_without_name_returns_none() {
+        let trie = subject_example();
+        assert_eq!(trie.get("0412"), None);
+    }
+
+    #[test]
+    fn get_number_longer_than_stored_returns_none() {
+        let trie = subject_example();
+        assert_eq!(trie.get("1123"), None);
+    }
+
+    #[test]
+    fn number_can_be_prefix_of_another() {
+        let mut trie = Trie::new();
+        trie.insert("112", "Urgences");
+        trie.insert("1123", "Standard");
+        assert_eq!(trie.get("112"), Some("Urgences"));
+        assert_eq!(trie.get("1123"), Some("Standard"));
+    }
+
+    #[test]
+    fn duplicate_number_keeps_last_name() {
+        let mut trie = Trie::new();
+        trie.insert("15", "SAMU");
+        trie.insert("15", "Urgences médicales");
+        assert_eq!(trie.get("15"), Some("Urgences médicales"));
     }
 }
