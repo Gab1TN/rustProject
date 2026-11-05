@@ -4,17 +4,35 @@ Stockage et accès efficace de numéros de téléphone à l'aide d'un **trie** (
 
 Le programme lit un fichier JSON de contacts, construit le trie en mémoire, puis génère un fichier PlantUML (format MindMap) permettant de visualiser la structure.
 
-> Projet en cours d'initialisation : la lecture du JSON, le trie et l'export PlantUML ne sont pas encore implémentés.
-
 ## Prérequis
 
 - [Rust](https://www.rust-lang.org/tools/install) 1.85 ou plus récent (édition 2024)
 - [Docker](https://docs.docker.com/desktop/) (optionnel, uniquement pour visualiser les graphes)
 
-## Lancer le projet
+## Utilisation
+
+Le programme prend un fichier JSON de contacts et écrit le diagramme dans `graph/`, avec le même nom que le fichier d'entrée :
 
 ```bash
-cargo run --release
+cargo run --release -- data/04_common_parts.json
+```
+
+```text
+Diagramme écrit dans graph/04_common_parts.puml
+```
+
+Le dossier `graph/` est créé s'il n'existe pas, et un fichier déjà présent est remplacé.
+
+Si le fichier est absent, si le JSON est mal formé ou si un numéro contient autre chose que des chiffres (`+33`, espaces, lettres, numéro vide), le programme n'écrit rien. Il affiche l'erreur sur la sortie d'erreur et se termine avec le code 1. Un seul contact invalide suffit pour refuser tout le fichier :
+
+```text
+Numéro invalide pour Alice : "+33612345678" (attendu : chiffres de 0 à 9, non vide)
+```
+
+Pour régénérer les diagrammes de tous les jeux de données valides :
+
+```bash
+for f in data/*.json; do cargo run --release -q -- "$f"; done
 ```
 
 ## Lancer les tests
