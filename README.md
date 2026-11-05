@@ -23,15 +23,32 @@ cargo run --release
 cargo test
 ```
 
+## Développement
+
+Avant chaque commit, vérifier que le code est formaté, sans warning et que les tests passent :
+
+```bash
+cargo fmt
+cargo clippy --all-targets -- -D warnings
+cargo test
+```
+
+Chaque fonctionnalité est développée sur sa propre branche puis intégrée à `main` par pull request. La CI GitHub Actions (`.github/workflows/ci.yml`) relance ces vérifications sur chaque pull request et sur `main`.
+
 ## Structure du projet
 
 ```text
 .
 ├── src/
-│   ├── lib.rs     # bibliothèque (#![forbid(unsafe_code)])
-│   └── main.rs    # point d'entrée du programme
-├── data/          # fichiers JSON de test
-└── graph/         # fichiers PlantUML (.puml) générés
+│   ├── lib.rs        # arbre des modules et API publique (#![forbid(unsafe_code)])
+│   ├── main.rs       # point d'entrée minimal, appelle la bibliothèque
+│   ├── contact.rs    # lecture et validation du fichier JSON
+│   ├── error.rs      # types d'erreurs
+│   ├── trie.rs       # trie implémenté sans crate externe
+│   └── plantuml.rs   # génération du MindMap PlantUML
+├── data/             # fichiers JSON de test
+├── graph/            # fichiers PlantUML (.puml) générés
+└── .github/workflows/ci.yml
 ```
 
 ## Format des données
