@@ -32,11 +32,11 @@ fn main() -> ExitCode {
 
 /// Lit `input`, construit le trie et écrit `graph/<nom>.puml`.
 fn run(input: &Path) -> Result<PathBuf, Error> {
-    let contacts = read_contacts(input)?;
-    let trie: Trie = contacts
-        .iter()
-        .map(|contact| (contact.number(), contact.name()))
-        .collect();
+    let contacts = read_contacts(input)?; // Maxime
+    let mut trie = Trie::new();
+    for contact in &contacts {
+        trie.insert(contact.number(), contact.name());
+    }
 
     let stem = input
         .file_stem()
@@ -44,6 +44,6 @@ fn run(input: &Path) -> Result<PathBuf, Error> {
     let output = Path::new(GRAPH_DIR).join(stem).with_extension("puml");
 
     fs::create_dir_all(GRAPH_DIR)?;
-    fs::write(&output, to_mindmap(&trie))?;
+    fs::write(&output, to_mindmap(&trie))?; // Erwin
     Ok(output)
 }
